@@ -10,25 +10,21 @@ use Psr\Http\Server\RequestHandlerInterface as Handler;
 class CorsMiddleware implements MiddlewareInterface {
     private array $allowedOrigins;
     public function __construct() {
-        $this->allowedOrigins = explode(',', $_ENV['ALLOWED_ORIGINS'] ?? '*');
+        $allowedOrigins = $_ENV['ALLOWED_ORIGINS'] ?? '*';
+        $this->allowedOrigins = $allowedOrigins === '*' ? ['*'] : explode(',', $allowedOrigins);
     }
 
     public function process(Request $request, Handler $handler): Response {
         $origin = $request->getHeaderLine('Origin');
-        $allowedOrigin = \in_array('*', $this->allowedOrigins) ? '*' : (\in_array($origin, $this->allowedOrigins) ? $origin : '');
+        $allowedOrigin = $this->getAllowOrigin($origin);
 
         $headers = [
-            'Access-Control-Allow-Origin' => $allowedOrigin,
             'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTION, PATCH',
             'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Requested-With',
         ];
 
-        if($request->getMethod() === 'OPTIONS') {
-            $response = $handler->handle($request);
-            foreach($headers as $key => $value) {
-                $response = $response->withHeader($key, $value);
-            }
-            return $response;
+        if($allowedOrigin !== '') {
+            $headers['Access-Control-Allow-Origin'] = $allowedOrigin;
         }
 
         $response = $handler->handle($request);
@@ -36,5 +32,17 @@ class CorsMiddleware implements MiddlewareInterface {
             $response = $response->withHeader($key, $value);
         }
         return $response;
+    }
+
+    private function getAllowOrigin(string $origin): string {
+        if(\in_array('*', $this->allowedOrigins)) {
+            return '*';
+        }
+
+        if($origin === '') {
+            return '';
+        }
+
+        return \in_array($origin, $this->allowedOrigins, true) ? $origin : '';
     }
 }

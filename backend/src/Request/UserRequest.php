@@ -2,7 +2,8 @@
 declare(strict_types=1);
 namespace App\Request;
 
-use App\Exception\ValidationException;
+use App\Validation\Validator;
+use App\Validation\Rule\{RequiredRule, EmailRule, StringRule};
 
 class UserRequest {
     private array $data;
@@ -16,60 +17,33 @@ class UserRequest {
     }
 
     public function validateCreate(): void {
-        $required = ['name', 'surname', 'email', 'password'];
-        $missing = [];
-
-        foreach ($required as $field) {
-            if (empty($this->data[$field])) {
-                $missing[] = $field;
-            }
-        }
-
-        if(!empty($missing)) {
-            throw new ValidationException("Missing required fields: " . implode(', ', $missing));
-        }
-
-        if(!filter_var($this->data['email'], FILTER_VALIDATE_EMAIL)) {
-            throw new ValidationException("Invalid email format");
-        }
-
-        $this->validateStringField('name', 1, 255);
-        $this->validateStringField('surname', 1, 255);
-        $this->validateStringField('address', 1, 500);
+        $validator = new Validator();
+        $validator
+            ->addRules('name', new RequiredRule(), new StringRule(1, 64))
+            ->addRules('surname', new RequiredRule(), new StringRule(1, 64))
+            ->addRules('email', new RequiredRule(), new EmailRule())
+            ->addRules('password', new RequiredRule(), new StringRule(1));
+        $validator->validate($this->data);
     }
 
     public function validateUpdate(): void {
+        $validator = new Validator();
         if(isset($this->data['email'])) {
-            if(!filter_var($this->data['email'], FILTER_VALIDATE_EMAIL)) {
-                throw new ValidationException("Invalid email format");
-            }
+            $validator->addRules('email', new EmailRule());
         }
 
         if(isset($this->data['name'])) {
-            $this->validateStringField('name', 1, 64);
+            $validator->addRules('name', new RequiredRule(), new StringRule(1, 64));
         }
 
         if(isset($this->data['surname'])) {
-            $this->validateStringField('surname', 1, 64);
+            $validator->addRules('surname', new RequiredRule(), new StringRule(1, 64));
         }
 
         if(isset($this->data['address'])) {
-            $this->validateStringField('address', 1, 128);
+            $validator->addRules('address', new RequiredRule(), new StringRule(1, 128));
         }
-    }
-
-    private function validateStringField(string $field, int $min, int|null $max = null): void {
-        if(!\is_string($this->data[$field])) {
-            throw new ValidationException("Invalid value for $field: must be a string");
-        }
-
-        if(\strlen($this->data[$field]) < $min) {
-            throw new ValidationException("Invalid value for $field: must be at least $min characters long");
-        }
-
-        if($max !== null && \strlen($this->data[$field]) > $max) {
-            throw new ValidationException("Invalid value for $field: must be at most $max characters long");
-        }
+        $validator->validate($this->data);
     }
 
 }
