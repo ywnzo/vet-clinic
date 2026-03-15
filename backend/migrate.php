@@ -24,13 +24,14 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     address TEXT,
+    role TEXT NOT NULL DEFAULT 'user',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 SQL;
 
 $createRefreshTokensTable = <<<SQL
-CREATE TABLE IF NOT EXISTS refresh_tokens (
+CREATE TABLE IF NOT EXISTS refreshtokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     token TEXT NOT NULL,
@@ -58,7 +59,7 @@ try {
 
 try {
     $pdo->exec($createRefreshTokensTable);
-    echo "✅ Table 'refresh_tokens' created successfully\n";
+    echo "✅ Table 'refreshtokens' created successfully\n";
 } catch (\PDOException $e) {
     echo "❌ Error creating table: " . $e->getMessage() . "\n";
     exit(1);

@@ -8,3 +8,26 @@
 [2026-03-14 19:53:34] WARNING: User not found {"exception":{}}
 [2026-03-15 10:14:50] WARNING: Email is required {"exception":{}}
 [2026-03-15 10:14:56] WARNING: Email is required {"exception":{}}
+[2026-03-15 11:17:09] WARNING: Missing required fields: email, password {"exception":{}}
+[2026-03-15 11:40:04] WARNING: Email already exists {"exception":{}}
+[2026-03-15 11:40:08] WARNING: Email already exists {"exception":{}}
+[2026-03-15 11:40:18] WARNING: Email already exists {"exception":{}}
+[2026-03-15 11:48:54] WARNING: Email already exists {"exception":{}}
+[2026-03-15 11:48:55] WARNING: Email already exists {"exception":{}}
+[2026-03-15 11:48:56] WARNING: Email already exists {"exception":{}}
+[2026-03-15 12:51:03] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:51:39] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:51:40] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:51:40] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:51:58] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:52:27] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:52:27] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:52:28] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:52:28] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:52:29] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:54:47] WARNING: Email already exists {"exception":{}}
+[2026-03-15 12:58:00] WARNING: ID is required {"exception":{}}
+[2026-03-15 12:58:07] WARNING: ID is required {"exception":{}}
+[2026-03-15 12:59:01] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 12:59:03] WARNING: Invalid credentials {"exception":{}}
+[2026-03-15 13:01:17] WARNING: Email already exists {"exception":{}}

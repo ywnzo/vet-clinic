@@ -19,7 +19,7 @@ class ORM {
     private array $originalData = [];
 
     public function __construct(array $data = []) {
-        $this->table = $this->getTable();
+        $this->table = (string)$this->getTable();
         if($data) {
             $this->originalData = $this->data = $data;
             $this->id = $data['id'] ?? null;
@@ -35,7 +35,9 @@ class ORM {
             $this->dirty = true;
         }
         if (isset(static::columnTypes[$name])) {
-            settype($value, static::columnTypes[$name]);
+            if(!\is_array($value)) {
+                settype($value, static::columnTypes[$name]);
+            }
         }
         $this->data[$name] = $value;
     }
@@ -78,12 +80,13 @@ class ORM {
         $placeholders = array_map(fn($c) => ":$c", $columns);
 
         $columns = implode(', ', $columns);
-        $placeholders = implode(',', $placeholders);
+        $placeholders = implode(', ', $placeholders);
 
         $query = "INSERT INTO $this->table ($columns) VALUES ($placeholders)";
         $stmt = static::$pdo->prepare($query);
         $stmt->execute($this->data);
         $this->id = (int) static::$pdo->lastInsertId();
+        $this->data['id'] = $this->id;
         $this->originalData = $this->data;
     }
 

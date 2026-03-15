@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Exception;
 
 class UnauthorizedException extends AppException {
-    public function __construct(string $message = 'Unauthorized', ?\Throwable $previous = null) {
-        parent::__construct($message, $message, 401, $previous);
+    public function __construct(string $message = 'Unauthorized', int $statusCode = 401, ?\Throwable $previous = null) {
+        parent::__construct($message, $message, $statusCode, $previous);
     }
 }

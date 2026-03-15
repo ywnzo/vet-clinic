@@ -35,3 +35,23 @@
 [2026-03-15 10:12:28] ERROR: Application error: Too few arguments to function Slim\Handlers\ErrorHandler::__invoke(), 4 passed in /var/www/html/backend/src/Middleware/ErrorMiddleware.php on line 14 and exactly 5 expected {"exception":{},"file":"\/var\/www\/html\/backend\/vendor\/slim\/slim\/Slim\/Handlers\/ErrorHandler.php","line":119}
 [2026-03-15 10:12:28] ERROR: Application error: Too few arguments to function Slim\Handlers\ErrorHandler::__invoke(), 4 passed in /var/www/html/backend/src/Middleware/ErrorMiddleware.php on line 14 and exactly 5 expected {"exception":{},"file":"\/var\/www\/html\/backend\/vendor\/slim\/slim\/Slim\/Handlers\/ErrorHandler.php","line":119}
 [2026-03-15 10:12:29] ERROR: Application error: Too few arguments to function Slim\Handlers\ErrorHandler::__invoke(), 4 passed in /var/www/html/backend/src/Middleware/ErrorMiddleware.php on line 14 and exactly 5 expected {"exception":{},"file":"\/var\/www\/html\/backend\/vendor\/slim\/slim\/Slim\/Handlers\/ErrorHandler.php","line":119}
+[2026-03-15 11:17:44] ERROR: Internal Server Error {"exception":{}}
+[2026-03-15 11:19:07] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:19:29] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:19:30] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:30:12] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:30:13] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:31:12] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:31:12] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:33:22] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:33:22] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:33:23] ERROR: Email already exists {"exception":{"errorInfo":["23000",19,"UNIQUE constraint failed: users.email"]}}
+[2026-03-15 11:38:34] ERROR: Internal Server Error {"exception":{}}
+[2026-03-15 11:40:15] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"no such table: refreshtokens"]}}
+[2026-03-15 11:40:24] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"no such table: refreshtokens"]}}
+[2026-03-15 11:49:00] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"no such table: refreshtokens"]}}
+[2026-03-15 11:50:10] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
+[2026-03-15 11:50:31] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
+[2026-03-15 11:50:33] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
+[2026-03-15 11:51:43] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
+[2026-03-15 12:52:44] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",8,"attempt to write a readonly database"]}}

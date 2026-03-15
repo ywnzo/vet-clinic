@@ -20,15 +20,16 @@ class AuthService {
             $user = new User([
                 'name' => $data['name'],
                 'surname' => $data['surname'],
-                'email' => ['email'],
+                'email' => $data['email'],
                 'password' => password_hash($data['password'], PASSWORD_BCRYPT),
                 'address' => $data['address'] ?? ''
             ]);
             $user->save();
-            return $user;
+
+            return $this->generateTokens($user);
         });
 
-        return $this->generateTokens($user);
+        return $user;
     }
 
     public function login(array $data): array {
@@ -97,6 +98,7 @@ class AuthService {
         $payload = [
             'sub' => $user->id,
             'email' => $user->email,
+            'role' => $user->role,
             'iat' => time(),
             'exp' => time() + JWT_EXPIRY,
         ];
