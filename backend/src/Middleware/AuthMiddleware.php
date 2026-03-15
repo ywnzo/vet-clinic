@@ -4,8 +4,10 @@ namespace App\Middleware;
 
 use App\Response\ApiResponse;
 use App\Service\AuthService;
-use App\Policies\UserPolicy;
+use App\Service\PolicyService;
 use App\Exception\UnauthorizedException;
+use App\ORM\User;
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -13,7 +15,7 @@ use Psr\Http\Server\RequestHandlerInterface as Handler;
 use Slim\Psr7\Response as SlimResponse;
 
 class AuthMiddleware implements MiddlewareInterface {
-    public function __construct(private AuthService $authService) {}
+    public function __construct(private AuthService $authService, private PolicyService $policyService) {}
 
     public function process(Request $request, Handler $handler): Response {
         try {
@@ -24,7 +26,18 @@ class AuthMiddleware implements MiddlewareInterface {
 
             $token = substr($authHandler, 7);
             $payload = $this->authService->validateAccessToken($token);
-            $request = $request->withAttribute('auth', $payload);
+
+            $user = User::findByID((int)$payload['sub']);
+            if($user == null) {
+                throw new UnauthorizedException('User not found', 401);
+            }
+
+            if($user->role !== $payload['role']) {
+                throw new UnauthorizedException('User role has been changed', 401);
+            }
+
+            $request = $request->withAttribute('auth', (array)$payload);
+            $request = $request->withAttribute('user', $user);
 
             $this->authorizeUserRoutes($request, $payload);
 
@@ -43,17 +56,23 @@ class AuthMiddleware implements MiddlewareInterface {
             return;
         }
 
-        $policy = new UserPolicy($payload);
+        $policy = $this->policyService->getPolicy('user', $payload);
 
         $authParts = explode('/', $path);
-        $userID = end($authParts);
+        $userID = (int)end($authParts);
 
-        match ($method) {
-            'GET' => $userID ? $policy->canShow((int) $userID) : $policy->canIndex(),
-            'POST' => str_contains($path, '/search') ? $policy->canSearch() : $policy->canCreate(),
-            'PUT' => $policy->canUpdate((int) $userID ?? 0),
-            'DELETE' => $policy->canDelete((int) $userID ?? 0),
-            default => $policy->canIndex(),
+        $action = match ($method) {
+            'GET' => $userID ? 'show' : 'index',
+            'POST' => str_contains($path, '/search') ? 'search' : 'create',
+            'PUT' => 'update',
+            'DELETE' => 'delete',
+            default => 'index',
         };
+
+        if(($method === 'GET' || $method === 'PUT' || $method === 'DELETE') && $userID) {
+            $policy->authorize($action, $userID);
+        } else {
+            $policy->authorize($action);
+        }
     }
 }

@@ -4,59 +4,45 @@ namespace App\Policies;
 
 use App\Exception\UnauthorizedException;
 
-class UserPolicy {
-    private array $auth;
+class UserPolicy extends AbstractPolicy {
 
     public function __construct(array $auth) {
-        $this->auth = $auth;
+        parent::__construct($auth, 'user');
     }
 
     public function canIndex(): void {
-        if ($this->getRole() !== 'admin') {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin()) {
+            $this->deny('Access denied');
         }
     }
 
     public function canShow(int $userID): void {
-        $isAdmin = $this->getRole() === 'admin';
-        $isOwner = $this->auth['sub'] === $userID;
-        if (!$isAdmin && !$isOwner) {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin() && $this->getUserId() !== $userID) {
+            $this->deny('Access denied');
         }
     }
 
     public function canSearch(): void {
-        $isAdmin = $this->getRole() === 'admin';
-
-        if (!$isAdmin) {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin()) {
+            $this->deny('Access denied');
         }
     }
 
     public function canCreate(): void {
-        if ($this->getRole() !== 'admin') {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin()) {
+            $this->deny('Access denied');
         }
     }
 
     public function canUpdate(int $userID): void {
-        $isAdmin = $this->getRole() === 'admin';
-        $isOwner = $this->auth['sub'] === $userID;
-        if (!$isAdmin && !$isOwner) {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin() && $this->getUserId() !== $userID) {
+            $this->deny('Access denied');
         }
     }
 
     public function canDelete(int $userID): void {
-        $isAdmin = $this->getRole() === 'admin';
-        $isOwner = $this->auth['sub'] === $userID;
-
-        if (!$isAdmin && !$isOwner) {
-            throw new UnauthorizedException('Access denied', 403);
+        if(!$this->isAdmin() && $this->getUserId() !== $userID) {
+            $this->deny('Access denied');
         }
-    }
-
-    private function getRole(): string {
-        return $this->auth['role'] ?? 'user';
     }
 }

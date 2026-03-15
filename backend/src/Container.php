@@ -3,11 +3,16 @@ namespace App;
 
 use App\Core\Database;
 use App\Core\Logger;
+
 use App\Service\UserService;
 use App\Service\AuthService;
+use App\Service\PolicyService;
+
 use App\Controller\UserController;
 use App\Controller\AuthController;
 use App\Middleware\AuthMiddleware;
+
+use App\Policies\UserPolicy;
 
 class Container {
     private array $bindings = [];
@@ -25,10 +30,16 @@ class Container {
         $this->singleton('authService', fn(Container $c) => new AuthService());
         $this->singleton('userService', fn(Container $c) => new UserService());
 
+        $this->singleton('policyService', function (Container $c) {
+            $policyService = new PolicyService();
+            $policyService->register('user', UserPolicy::class);
+            return $policyService;
+        });
+
         $this->singleton('userController', fn(Container $c) => new UserController($c->get('userService'), $c->get('logger')));
         $this->singleton('authController', fn(Container $c) => new AuthController($c->get('authService'), $c->get('logger')));
 
-        $this->singleton('authMiddleware', fn(Container $c) => new AuthMiddleware($c->get('authService')));
+        $this->singleton('authMiddleware', fn(Container $c) => new AuthMiddleware($c->get('authService'), $c->get('policyService')));
     }
 
     private function singleton(string $name, callable $callback): void {
