@@ -1,0 +1,5 @@
+[2026-03-14 17:39:47] ERROR: Application error: Too few arguments to function Slim\Handlers\ErrorHandler::__invoke(), 4 passed in /var/www/html/backend/src/App.php on line 61 and exactly 5 expected {"exception":{},"file":"\/var\/www\/html\/backend\/vendor\/slim\/slim\/Slim\/Handlers\/ErrorHandler.php","line":119}
+[2026-03-14 19:13:25] ERROR: Application error: Too few arguments to function Slim\Handlers\ErrorHandler::__invoke(), 4 passed in /var/www/html/backend/src/Core/Routes.php on line 46 and exactly 5 expected {"exception":{},"file":"\/var\/www\/html\/backend\/vendor\/slim\/slim\/Slim\/Handlers\/ErrorHandler.php","line":119}
+[2026-03-14 19:48:50] ERROR: Internal Server Error {"exception":{}}
+[2026-03-14 19:53:01] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",8,"attempt to write a readonly database"]}}
+[2026-03-14 19:53:05] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",8,"attempt to write a readonly database"]}}

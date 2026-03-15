@@ -1,0 +1,8 @@
+[2026-03-14 17:39:47] WARNING: Missing required fields {"exception":{}}
+[2026-03-14 17:41:45] WARNING: Missing required fields {"exception":{}}
+[2026-03-14 19:13:06] WARNING: Missing required fields {"exception":{}}
+[2026-03-14 19:50:02] WARNING: Missing required fields: email, password {"exception":{}}
+[2026-03-14 19:52:16] WARNING: User not found {"exception":{}}
+[2026-03-14 19:52:33] WARNING: Missing required fields: email, password {"exception":{}}
+[2026-03-14 19:52:55] WARNING: Invalid email format {"exception":{}}
+[2026-03-14 19:53:34] WARNING: User not found {"exception":{}}

@@ -15,3 +15,4 @@ services:
     image: php:8.5-fpm-alpine
     volumes:
       - .:/var/www/html
+    entrypoint: sh -c "chmod -R 777 /var/www/html/backend/logs && chmod -R 777 /var/www/html/backend/database && docker-php-entrypoint php-fpm"
