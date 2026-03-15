@@ -29,6 +29,17 @@ CREATE TABLE IF NOT EXISTS users (
 );
 SQL;
 
+$createRefreshTokensTable = <<<SQL
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+SQL;
+
 try {
     $pdo->exec($createUsersTable);
     echo "✅ Table 'users' created successfully\n";
@@ -43,6 +54,14 @@ try {
     echo "✅ Index on 'email' created successfully\n";
 } catch (\PDOException $e) {
     echo "⚠️  Index creation warning: " . $e->getMessage() . "\n";
+}
+
+try {
+    $pdo->exec($createRefreshTokensTable);
+    echo "✅ Table 'refresh_tokens' created successfully\n";
+} catch (\PDOException $e) {
+    echo "❌ Error creating table: " . $e->getMessage() . "\n";
+    exit(1);
 }
 
 echo "\n Migration complete!\n";

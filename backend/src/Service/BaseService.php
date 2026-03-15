@@ -2,10 +2,8 @@
 declare(strict_types=1);
 namespace App\Service;
 
-use App\Core\Database;
-
 abstract class BaseService {
-    public function __construct(protected Database $db) {}
+    public function __construct() {}
 
     abstract protected function index(): array;
     abstract protected function find(array $args = []): array;

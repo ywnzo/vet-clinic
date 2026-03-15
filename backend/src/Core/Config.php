@@ -21,6 +21,10 @@ class Config {
         define('APP_ENV', $_ENV['APP_ENV'] ?? 'production');
         define('APP_ROOT', dirname(__DIR__, 2));
 
+        define('JWT_SECRET', $_ENV['JWT_SECRET'] ?? '');
+        define('JWT_EXPIRY', $_ENV['JWT_EXPIRY'] ?? 3600);
+        define('JWT_REFRESH_EXPIRY', $_ENV['JWT_REFRESH_EXPIRY'] ?? 86400);
+
         if (APP_ENV === 'production') {
             error_reporting(0);
             ini_set('display_errors', '0');

@@ -12,6 +12,7 @@ class ORM {
     private array $data = [];
 
     protected static array $allowedColumns = [];
+    protected static array $hiddenColumns = [];
     protected static array $columnTypes = [];
 
     private bool $dirty = false;
@@ -212,6 +213,6 @@ class ORM {
     }
 
     public function toArray(): array {
-        return $this->data;
+        return array_diff_key($this->data, array_flip(static::$hiddenColumns));
     }
 }

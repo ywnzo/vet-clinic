@@ -21,13 +21,6 @@ abstract class BaseController {
         $this->logger = $logger;
     }
 
-    abstract protected function index(Request $req, Response $res): Response;
-    abstract protected function find(Request $req, Response $res, array $args = []): Response;
-    abstract protected function create(Request $req, Response $res): Response;
-    abstract protected function update(Request $req, Response $res, array $args = []): Response;
-    abstract protected function delete(Request $req, Response $res, array $args = []): Response;
-
-
     protected function respond(Response $res, callable $callback): Response {
         try {
             return $callback($res);

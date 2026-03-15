@@ -6,3 +6,5 @@
 [2026-03-14 19:52:33] WARNING: Missing required fields: email, password {"exception":{}}
 [2026-03-14 19:52:55] WARNING: Invalid email format {"exception":{}}
 [2026-03-14 19:53:34] WARNING: User not found {"exception":{}}
+[2026-03-15 10:14:50] WARNING: Email is required {"exception":{}}
+[2026-03-15 10:14:56] WARNING: Email is required {"exception":{}}

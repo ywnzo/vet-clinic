@@ -4,10 +4,13 @@ namespace App\Core;
 
 
 use App\Container;
+use App\Middleware\CorsMiddleware;
+use App\Middleware\ErrorMiddleware;
+
 use Slim\App as Router;
+use Slim\Routing\RouteCollectorProxy;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 class Routes {
     private Router $router;
@@ -22,42 +25,31 @@ class Routes {
 
     private function setupMiddleware() {
         $this->router->addBodyParsingMiddleware();
-        $this->router->add(function(Request $req, RequestHandler $handler): Response {
-            if($req->getMethod() === 'OPTIONS') {
-                $response = $handler->handle($req);
-                return $response
-                    ->withHeader('Access-Control-Allow-Origin', '*')
-                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
-                    ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-                    ->withHeader('Content-Type', 'application/json');
-            }
-
-            $response = $handler->handle($req);
-            return $response
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-                ->withHeader('Content-Type', 'application/json');
-        });
-
-        $errorMiddleware = $this->router->addErrorMiddleware(APP_ENV === 'development', true, true);
-        $defaultHandler = $errorMiddleware->getDefaultErrorHandler();
-        $errorMiddleware->setDefaultErrorHandler(function (Request $req, \Throwable $e, bool $displayError, bool $logErrors) use ($defaultHandler) {
-            $response = $defaultHandler($req, $e, $displayError, $logErrors);
-            return $response
-                ->withHeader('Content-Type', 'application/json');
-        });
-
+        $this->router->add(new CorsMiddleware());
+        ErrorMiddleware::register($this->router);
     }
 
     private function registerRoutes() {
+        $authController = $this->container->get('authController');
         $userController = $this->container->get('userController');
-        $this->router->get('/api/users', [$userController, 'index']);
-        $this->router->get('/api/users/{id}', [$userController, 'find']);
-        $this->router->post('/api/users/search', [$userController, 'find']);
-        $this->router->post('/api/users', [$userController, 'create']);
-        $this->router->put('/api/users/{id}', [$userController, 'update']);
-        $this->router->delete('/api/users/{id}', [$userController, 'delete']);
+        $authMiddleware = $this->container->get('authMiddleware');
+
+        $this->router->group('/api/auth', function(RouteCollectorProxy $group) use ($authController) {
+            $group->post('/register', [$authController, 'register']);
+            $group->post('/login', [$authController, 'login']);
+            $group->post('/refresh', [$authController, 'refresh']);
+            $group->post('/logout', [$authController, 'logout']);
+        });
+
+
+        $this->router->group('/api/users', function(RouteCollectorProxy $group) use ($userController, $authMiddleware) {
+            $group->get('', [$userController, 'index']);
+            $group->get('/{id}', [$userController, 'find']);
+            $group->post('/search', [$userController, 'find']);
+            $group->post('', [$userController, 'create']);
+            $group->put('/{id}', [$userController, 'update']);
+            $group->delete('/{id}', [$userController, 'delete']);
+        })->add($authMiddleware);
 
         $this->router->get('/api/health', function(Request $req, Response $res): Response {
             $res->getBody()->write(

@@ -3,8 +3,11 @@ namespace App;
 
 use App\Core\Database;
 use App\Core\Logger;
-use App\Controller\UserController;
 use App\Service\UserService;
+use App\Service\AuthService;
+use App\Controller\UserController;
+use App\Controller\AuthController;
+use App\Middleware\AuthMiddleware;
 
 class Container {
     private array $bindings = [];
@@ -16,13 +19,19 @@ class Container {
     }
 
     private function registerDefaults(): void {
-        $this->signleton('database', fn(Container $container) => new Database());
-        $this->signleton('logger', fn(Container $container) => new Logger());
-        $this->signleton('userService', fn(Container $container) => new UserService($container->get('database')));
-        $this->signleton('userController', fn(Container $container) => new UserController($container->get('userService'), $container->get('logger')));
+        $this->singleton('database', fn(Container $c) => new Database());
+        $this->singleton('logger', fn(Container $c) => new Logger());
+
+        $this->singleton('authService', fn(Container $c) => new AuthService());
+        $this->singleton('userService', fn(Container $c) => new UserService());
+
+        $this->singleton('userController', fn(Container $c) => new UserController($c->get('userService'), $c->get('logger')));
+        $this->singleton('authController', fn(Container $c) => new AuthController($c->get('authService'), $c->get('logger')));
+
+        $this->singleton('authMiddleware', fn(Container $c) => new AuthMiddleware($c->get('authService')));
     }
 
-    private function signleton(string $name, callable $callback): void {
+    private function singleton(string $name, callable $callback): void {
         $this->bindings[$name] = $callback;
         $this->singletonFlags[$name] = true;
     }
