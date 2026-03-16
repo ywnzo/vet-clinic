@@ -210,7 +210,9 @@ class ORM {
     }
 
     private static function validateColumn(string $column): void {
-        if (!\in_array($column, static::$allowedColumns, true)) {
+        $isValid = preg_match('/^[a-zA-Z0-9_]+$/', $column);
+        $isAllowed = \in_array($column, static::$allowedColumns, true);
+        if (!$isValid || !$isAllowed) {
             throw new \InvalidArgumentException("Column '$column' not allowed");
         }
     }

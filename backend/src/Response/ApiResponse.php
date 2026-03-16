@@ -31,7 +31,7 @@ class ApiResponse {
         return $res->withStatus($statusCode)->withHeader('Content-Type', 'application/json');
     }
 
-    public static function error(Response $res, string $message, int $statusCode = 400, array $debug = []): Response {
+    public static function error(Response $res, string $message, int $statusCode = 400, array $debug = [], ?string $errorCode = null): Response {
         $payload = [
             'status' => 'error',
             'message' => $message,
@@ -40,6 +40,10 @@ class ApiResponse {
 
         if(!empty($debug)) {
             $payload['debug'] = $debug;
+        }
+
+        if($errorCode !== null) {
+            $payload['errorCode'] = $errorCode;
         }
 
         $res->getBody()->write(json_encode($payload));

@@ -107,7 +107,7 @@ class AuthService {
 
     private function generateRefreshToken(User $user): string {
         $token = bin2hex(random_bytes(32));
-        $expiresAt = date('Y-m-m H:i:s', time() + JWT_REFRESH_EXPIRY);
+        $expiresAt = date('Y-m-d H:i:s', time() + JWT_REFRESH_EXPIRY);
         $refreshToken = new RefreshToken([
             'user_id' => $user->id,
             'token' => $token,

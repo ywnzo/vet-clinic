@@ -9,7 +9,6 @@ use App\Exception\ValidationException;
 
 use App\Response\ApiResponse;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use App\Core\Logger;
 
@@ -65,7 +64,12 @@ abstract class BaseController {
             ];
         }
 
-        return ApiResponse::error($res, $message, $statusCode, $debug);
+        $errorCode = null;
+        if($e instanceof AppException) {
+            $errorCode = $e->getErrorCode();
+        }
+
+        return ApiResponse::error($res, $message, $statusCode, $debug, $errorCode);
     }
 
     protected function noContent(Response $res): Response {

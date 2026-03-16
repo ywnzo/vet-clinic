@@ -33,6 +33,17 @@ class AuthController extends BaseController {
             $authRequest->validateLogin();
 
             $result = $this->service->login($body);
+
+            $refreshToken = $result['refresh_token'] ?? null;
+            if(!empty($refreshToken)) {
+                $cookie = \sprintf('refresh_token=%s; Path=/; Secure; Httponly; Max-Age=%d',
+                    $refreshToken,
+                    (int) ($_ENV['JWT_REFRESH_EXPIRY'] ?? JWT_REFRESH_EXPIRY)
+                );
+                $res = $res->withHeader('Set-Cookie', $cookie);
+                unset($result['refresh_token']);
+            }
+
             return $this->success($res, $result);
         });
     }
@@ -43,10 +54,23 @@ class AuthController extends BaseController {
             $refreshToken = $body['refresh_token'] ?? null;
 
             if(empty($refreshToken)) {
+                $cookies = $req->getCookieParams();
+                $refreshToken = $cookies['refresh_token'] ?? null;
+            }
+
+            if(empty($refreshToken)) {
                 throw new ValidationException("Refresh token is required");
             }
 
             $result = $this->service->refresh(['refresh_token' => $refreshToken]);
+
+            $cookie = \sprintf('refresh_token=%s; Path=/; Secure; Httponly; Max-Age=%d',
+                $refreshToken,
+                (int) ($_ENV['JWT_REFRESH_EXPIRY'] ?? JWT_REFRESH_EXPIRY)
+            );
+            $res = $res->withHeader('Set-Cookie', $cookie);
+            unset($result['refresh_token']);
+
             return $this->success($res, $result);
         });
     }
@@ -57,10 +81,18 @@ class AuthController extends BaseController {
             $refreshToken = $body['refresh_token'] ?? null;
 
             if(empty($refreshToken)) {
+                $cookies = $req->getCookieParams();
+                $refreshToken = $cookies['refresh_token'] ?? null;
+            }
+
+            if(empty($refreshToken)) {
                 throw new ValidationException("Refresh token is required");
             }
 
             $this->service->logout($refreshToken);
+
+            $clear = 'refresh_token=deleted; Path=/; Secure; Httponly; Max-Age=0';
+            $res = $res->withHeader('Set-Cookie', $clear);
             return $this->noContent($res);
         });
     }

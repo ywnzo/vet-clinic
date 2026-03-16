@@ -42,3 +42,25 @@
 [2026-03-15 14:38:45] WARNING: Invalid email format {"exception":{"errors":[]}}
 [2026-03-15 14:38:45] WARNING: Invalid email format {"exception":{"errors":[]}}
 [2026-03-15 14:38:51] WARNING: Email already exists {"exception":{"errors":[]}}
+[2026-03-15 17:39:39] INFO: request.start {"requestId":"d29a0555dcd47d4600544642","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 17:39:39] INFO: request.end {"requestId":"d29a0555dcd47d4600544642","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 17:39:39] INFO: request.start {"requestId":"e8a3ff4c6af13a81ced7fa35","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 17:39:39] INFO: request.end {"requestId":"e8a3ff4c6af13a81ced7fa35","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:13] INFO: request.start {"requestId":"5173481b52fb2f470acc80fa","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:13] INFO: request.end {"requestId":"5173481b52fb2f470acc80fa","method":"GET","path":"\/api\/users\/3","statusCode":401,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:17] INFO: request.start {"requestId":"995f650359983a2f1be16655","method":"POST","path":"\/api\/auth\/login","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:17] INFO: request.end {"requestId":"995f650359983a2f1be16655","method":"POST","path":"\/api\/auth\/login","statusCode":200,"duration":178,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:20] INFO: request.start {"requestId":"6debab8e7a1f50d61207f44e","method":"POST","path":"\/api\/auth\/login","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:20] INFO: request.end {"requestId":"6debab8e7a1f50d61207f44e","method":"POST","path":"\/api\/auth\/login","statusCode":200,"duration":179,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:33] INFO: request.start {"requestId":"54bb38d597cb016acd0a9e3a","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:10:33] INFO: request.end {"requestId":"54bb38d597cb016acd0a9e3a","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:00] INFO: request.start {"requestId":"f228d414ddf9f4280bab4981","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:00] INFO: request.end {"requestId":"f228d414ddf9f4280bab4981","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:01] INFO: request.start {"requestId":"7606cd355ed70357c1c10696","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:01] INFO: request.end {"requestId":"7606cd355ed70357c1c10696","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:01] INFO: request.start {"requestId":"0255115bacd62a7571256522","method":"GET","path":"\/api\/users\/3","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:14:01] INFO: request.end {"requestId":"0255115bacd62a7571256522","method":"GET","path":"\/api\/users\/3","statusCode":200,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:15:42] INFO: request.start {"requestId":"85df16c8c6f12b2aa03631b7","method":"GET","path":"\/api\/users","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:15:42] INFO: request.end {"requestId":"85df16c8c6f12b2aa03631b7","method":"GET","path":"\/api\/users","statusCode":403,"duration":0,"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:15:43] INFO: request.start {"requestId":"c22176f9b269ce5e2832d8dd","method":"GET","path":"\/api\/users","query":[],"ip":"172.19.0.1","userId":null}
+[2026-03-15 18:15:43] INFO: request.end {"requestId":"c22176f9b269ce5e2832d8dd","method":"GET","path":"\/api\/users","statusCode":403,"duration":0,"ip":"172.19.0.1","userId":null}

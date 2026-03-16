@@ -4,6 +4,7 @@ namespace App\Core;
 
 
 use App\Container;
+use App\Middleware\RequestLoggingMiddleware;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\ErrorMiddleware;
 
@@ -25,6 +26,10 @@ class Routes {
 
     private function setupMiddleware() {
         $this->router->addBodyParsingMiddleware();
+        $this->router->add(new RequestLoggingMiddleware(
+            $this->container->get('logger'),
+            $_ENV['REQUEST_ID_HEADER'] ?? 'X-Request-Id'
+        ));
         $this->router->add(new CorsMiddleware());
         ErrorMiddleware::register($this->router);
     }
@@ -40,7 +45,6 @@ class Routes {
             $group->post('/refresh', [$authController, 'refresh']);
             $group->post('/logout', [$authController, 'logout']);
         });
-
 
         $this->router->group('/api/users', function(RouteCollectorProxy $group) use ($userController, $authMiddleware) {
             $group->get('', [$userController, 'index']);

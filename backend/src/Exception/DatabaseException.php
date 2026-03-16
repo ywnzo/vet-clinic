@@ -5,7 +5,20 @@ namespace App\Exception;
 class DatabaseException extends AppException {
     public function __construct(string $message = 'Database error', ?\Throwable $previous = null) {
         $userMessage = self::extractUserMessage($message);
-        parent::__construct($message, $userMessage, 500, $previous);
+        $status = 500;
+        $errorCode = null;
+
+        if(str_contains($message, 'UNIQUE constraint failed')) {
+            $status = 409;
+            $errorCode = 'conflict';
+        } elseif(str_contains($message, 'no such table')) {
+            $status = 500;
+            $errorCode = 'database-missing-table';
+        } elseif(str_contains($message, 'NOT NULL constraint failed')) {
+            $status = 400;
+            $errorCode = 'required-field-missing';
+        }
+        parent::__construct($message, $userMessage, $status, $errorCode, $previous);
     }
 
     private static function extractUserMessage(string $message): string {

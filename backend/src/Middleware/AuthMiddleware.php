@@ -27,7 +27,12 @@ class AuthMiddleware implements MiddlewareInterface {
             $token = substr($authHandler, 7);
             $payload = $this->authService->validateAccessToken($token);
 
-            $user = User::findByID((int)$payload['sub']);
+            if(!isset($payload['sub']) || !isset($payload['role'])) {
+                throw new UnauthorizedException('Invalid access token payload', 401);
+            }
+
+            $userID = (int)$payload['sub'];
+            $user = User::findByID($userID);
             if($user == null) {
                 throw new UnauthorizedException('User not found', 401);
             }
