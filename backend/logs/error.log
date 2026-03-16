@@ -55,3 +55,25 @@
 [2026-03-15 11:50:33] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
 [2026-03-15 11:51:43] ERROR: Refreshtokens.user_id is required {"exception":{"errorInfo":["23000",19,"NOT NULL constraint failed: refreshtokens.user_id"]}}
 [2026-03-15 12:52:44] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",8,"attempt to write a readonly database"]}}
+[2026-03-16 16:20:22] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"no such table: users"]}}
+[2026-03-16 16:35:44] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:39:18] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:39:20] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:40:53] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:45:24] ERROR: Internal Server Error {"exception":{}}
+[2026-03-16 16:45:36] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:45:37] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:46:33] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:46:33] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:47:11] ERROR: Internal Server Error {"exception":{}}
+[2026-03-16 16:47:18] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:47:19] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:47:20] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:49:12] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:49:13] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:49:59] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:50:00] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:50:13] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:50:13] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:50:14] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}
+[2026-03-16 16:50:59] ERROR: Database operation failed {"exception":{"errorInfo":["HY000",1,"near \"(\": syntax error"]}}

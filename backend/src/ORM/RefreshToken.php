@@ -6,6 +6,7 @@ class RefreshToken extends ORM {
     protected static string $table = 'refresh_tokens';
 
     protected static array $allowedColumns = ['id', 'user_id', 'token', 'expires_at', 'created_at'];
+    protected static array $hiddenColumns = ['token'];
     protected static array $columnTypes = [
         'id' => 'integer',
         'user_id' => 'integer',

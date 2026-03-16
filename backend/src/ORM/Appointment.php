@@ -10,10 +10,10 @@ class Appointment extends ORM {
     protected static array $allowedColumns = ['id', 'date', 'time', 'user_id'];
     protected static array $hiddenColumns = [];
     protected static array $columnTypes = [
-        'id' => 'int',
+        'id' => 'integer',
         'date' => 'date',
         'time' => 'time',
-        'user_id' => 'int'
+        'user_id' => 'integer'
     ];
 
     public static function findByDate(string $date): array {

@@ -5,10 +5,11 @@ namespace App\ORM;
 
 use DateTimeImmutable;
 use PDO;
+use Throwable;
 
 class ORM {
     protected static PDO $pdo;
-    protected string $table;
+    protected static string $table;
     protected ?int $id = null;
     private array $data = [];
     private array $relationsCache = [];
@@ -16,16 +17,6 @@ class ORM {
     protected static array $allowedColumns = [];
     protected static array $hiddenColumns = [];
     protected static array $columnTypes = [];
-
-    protected static array $primitiveMap = [
-        'integer' => 'integer',
-        'int' => 'integer',
-        'bool' => 'boolean',
-        'boolean' => 'boolean',
-        'double' => 'double',
-        'float' => 'float',
-        'string' => 'string',
-    ];
 
     protected static array $dateFormats = [
         'datetime' => 'Y-m-d H:i:s',
@@ -37,7 +28,6 @@ class ORM {
     private array $originalData = [];
 
     public function __construct(array $data = []) {
-        $this->table = (string)$this->getTable();
         if($data) {
             $this->originalData = $this->data = $this->castRowFromStorage($data);
             $this->id = $this->data['id'] ?? null;
@@ -49,41 +39,36 @@ class ORM {
     }
 
     public function __set($name, $value): void {
-        if(isset($this->id)) {
+        $columnType = static::$columnTypes[$name] ?? null;
+        $prepared = $value;
+        $canonical = self::canonicalType($columnType);
+
+        if($canonical !== null) {
+            if(self::isDateType($canonical)) {
+                $format = self::getDateFormatForType($canonical);
+                $parsed = $this->parseDateValue($value, $format);
+                if($parsed !== null) {
+                    $prepared = $parsed;
+                }
+            } elseif(($ptype = self::canonicalPrimitiveForType($canonical)) !== null) {
+                $tmp = $value;
+                settype($tmp, $ptype);
+                $prepared = $tmp;
+            }
+        }
+
+        if($this->id !== null) {
             $original = $this->originalData[$name] ?? null;
-            if($original !== $value) {
+            if(!$this->valuesAreEqual($original, $prepared, $canonical)) {
                 $this->dirty = true;
             }
         }
 
-        $type = static::$columnTypes[$name] ?? null;
-        if($type !== null) {
-            $lower = strtolower($type);
-            if(isset(self::$dateFormats[$lower])) {
-                if(\is_string($value)){
-                    try {
-                        $value = new DateTimeImmutable($value);
-                    } catch (\Throwable $e) {}
-                }
-            } elseif(isset(self::$primitiveMap[$lower])) {
-                settype($value, self::$primitiveMap[$lower]);
-            }
-        }
-
-        $this->data[$name] = $value;
+        $this->data[$name] = $prepared;
     }
 
-    public static function setPDO(PDO $pdo): void {
-        static::$pdo = $pdo;
-    }
-
-    public static function getTable(): string {
-        return static::$table;
-    }
-
-    protected function clearRelationsCache(): void {
-        $this->relationsCache = [];
-    }
+    public static function setPDO(PDO $pdo): void { static::$pdo = $pdo; }
+    protected function clearRelationsCache(): void { $this->relationsCache = [];}
 
     public static function transaction(callable $callback): mixed {
         if (!isset(static::$pdo)) {
@@ -115,14 +100,24 @@ class ORM {
     }
 
     private function insert(): void {
-        $intersect = array_intersect_key($this->data, array_flip(static::$allowedColumns));
-        $columns = array_values($intersect);
-        $placeholders = array_map(fn($c) => ":$c", $columns);
+        $table = static::$table;
+        $subset = array_intersect(array_keys($this->data), static::$allowedColumns);
+        $columns = array_values($subset);
+        if(empty($columns)) {
+            throw new \Exception("No columns to insert to table {$table}");
+        }
 
+        foreach($columns as $col) {
+            if(!preg_match('/^[a-zA-Z0-9_]+$/', $col)) {
+                throw new \Exception("Invalid column name: $col");
+            }
+        }
+
+        $placeholders = array_map(fn($c) => ":$c", $columns);
         $columnsSql = implode(', ', $columns);
         $placeholdersSql = implode(', ', $placeholders);
 
-        $query = "INSERT INTO $this->table ($columnsSql) VALUES ($placeholdersSql)";
+        $query = "INSERT INTO {$table} ($columnsSql) VALUES ($placeholdersSql)";
         $stmt = static::$pdo->prepare($query);
 
         $params = [];
@@ -132,6 +127,7 @@ class ORM {
 
         $stmt->execute($params);
         $this->id = (int) static::$pdo->lastInsertId();
+        $this->data['id'] = $this->id;
         $this->originalData = $this->data;
         $this->clearRelationsCache();
     }
@@ -141,16 +137,18 @@ class ORM {
         $params = [];
         foreach($this->data as $key => $value) {
             if ($key === 'id') continue;
-            if (!\in_array($key, static::$allowedColumns)) continue;
-            if ($value === ($this->originalData[$key] ?? null)) continue;
+            if (!\in_array($key, static::$allowedColumns, true)) continue;
+            if ($this->valuesAreEqual($this->originalData[$key] ?? null, $value, static::$columnTypes[$key] ?? null))
+                continue;
             $set[] = "$key = :$key";
             $params[$key] = $this->prepareValueForStorage($key, $value);
         }
 
         if (empty($set)) return;
 
+        $table = static::$table;
         $params['id'] = $this->id;
-        $query = "UPDATE $this->table SET " . implode(',', $set) . " WHERE id = :id";
+        $query = "UPDATE $table SET " . implode(', ', $set) . " WHERE id = :id";
         $stmt = static::$pdo->prepare($query);
         $stmt->execute($params);
         $this->clearRelationsCache();
@@ -158,7 +156,8 @@ class ORM {
 
     public function delete(): ORM {
         if($this->id) {
-            $stmt = static::$pdo->prepare("DELETE FROM $this->table WHERE id = :id");
+            $table = static::$table;
+            $stmt = static::$pdo->prepare("DELETE FROM $table WHERE id = :id");
             $stmt->execute(['id' => $this->id]);
         }
         $this->clearRelationsCache();
@@ -166,7 +165,14 @@ class ORM {
     }
 
     public static function find(array $filters = [], array $sort = [], int $page = 1, int $offset = 0): array {
-        $table = static::getTable();
+        if($page < 1) {
+            throw new \InvalidArgumentException("Page must be greater than 0");
+        }
+        if($offset < 0) {
+            throw new \InvalidArgumentException("Offset must be greater than or equal to 0");
+        }
+
+        $table = static::$table;
         $query = "SELECT * FROM $table WHERE 1=1";
         $prepared = static::prepareQuery($query, $filters);
         $query = $prepared['query'];
@@ -204,7 +210,7 @@ class ORM {
     }
 
     public static function count(array $filters = []): int {
-        $table = static::getTable();
+        $table = static::$table;
         $query = "SELECT COUNT(*) FROM $table WHERE 1=1";
         $prepared = static::prepareQuery($query, $filters);
         $query = $prepared['query'];
@@ -217,10 +223,15 @@ class ORM {
     }
 
     public static function all(): array {
-        $table = static::getTable();
-        $stmt = static::$pdo->query("SELECT * FROM $table");
+        $table = static::$table;
+        $stmt = static::$pdo->query("SELECT * FROM {$table}");
         $results = [];
         while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row = array_intersect_key($row, array_flip(static::$allowedColumns));
+            $row = array_diff_key($row, array_flip(static::$hiddenColumns));
+            if(empty($row)) {
+                continue;
+            }
             $results[] = new static($row);
         }
         return $results;
@@ -237,7 +248,7 @@ class ORM {
         return $results;
     }
 
-    public function belongsTo(string $relatedClass, string $foreignKey, string $localKey): ?ORM {
+    public function belongsTo(string $relatedClass, string $foreignKey, string $localKey = 'id'): ?ORM {
         $cacheKey = "belongsTo:$relatedClass:$foreignKey:$localKey";
         if(isset($this->relationsCache[$cacheKey])) {
             return $this->relationsCache[$cacheKey];
@@ -291,15 +302,13 @@ class ORM {
     public function toArray(): array {
         $out = [];
         foreach($this->data as $col => $val) {
-            if (\in_array($col, static::$hiddenColumns)) continue;
+            if (\in_array($col, static::$hiddenColumns, true)) continue;
 
-            $type = strtolower((string) (static::$columnTypes[$col] ?? null));
-            if ($val instanceof DateTimeImmutable && isset(self::$dateFormats[$type])) {
-                $format = self::$dateFormats[$type];
-                $out[$col] = $val->format($format);
-            } else {
-                $out[$col] = $val;
-            }
+            $type = static::$columnTypes[$col] ?? null;
+            $canonical = self::canonicalType($type);
+            $format = self::getDateFormatForType($canonical);
+            $isDateTimeImmutable = $val instanceof DateTimeImmutable && $format !== null;
+            $out[$col] = $isDateTimeImmutable ? $val->format($format) : $val;
         }
         return $out;
     }
@@ -310,15 +319,17 @@ class ORM {
             if ($val === null) continue;
             if ($type === null) continue;
 
-            $lower = strtolower((string) $type);
-            if (isset(self::$dateFormats[$lower])){
+            $canonical = self::canonicalType($type);
+            $dateFormat = self::getDateFormatForType($canonical);
+            $primitiveType = self::canonicalPrimitiveForType($canonical);
+            if ($dateFormat !== null) {
                 try {
                     $row[$col] = new DateTimeImmutable($val);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $row[$col] = $val;
                 }
-            } elseif (isset(self::$primitiveMap[$lower])) {
-                settype($val, self::$primitiveMap[$lower]);
+            } elseif ($primitiveType !== null) {
+                settype($val, $primitiveType);
                 $row[$col] = $val;
             } else {
                 $row[$col] = $val;
@@ -333,20 +344,107 @@ class ORM {
         $type = static::$columnTypes[$col] ?? null;
         if ($type === null) return $value;
 
-        $lower = strtolower((string) $type);
-        if($value instanceof DateTimeImmutable && isset(self::$dateFormats[$lower])) {
-            return $value->format(self::$dateFormats[$lower]);
+        $canonical = self::canonicalType($type);
+        $dateFormat = self::getDateFormatForType($canonical);
+        if ($value instanceof DateTimeImmutable && $dateFormat !== null) {
+            return $value->format($dateFormat);
         }
 
-        if(isset(self::$dateFormats[$lower]) && \is_string($value)) {
+        $primitiveType = self::canonicalPrimitiveForType($canonical);
+        if ($primitiveType !== null) {
+            settype($value, $primitiveType);
             return $value;
         }
 
-        if(isset(self::$primitiveMap[$lower])) {
-            settype($value, self::$primitiveMap[$lower]);
-            return $value;
-        }
         return $value;
+    }
+
+    private static function canonicalType(?string $type): ?string {
+        if ($type === null) return null;
+        $t = strtolower($type);
+        return match ($t) {
+            'int' => 'integer',
+            'integer' => 'integer',
+            'bool' => 'boolean',
+            'boolean' => 'boolean',
+            'float' => 'double',
+            'double' => 'double',
+            'string' => 'string',
+            'date' => 'date',
+            'time' => 'time',
+            'datetime' => 'datetime',
+            default => $t,
+        };
+    }
+
+    private static function isDateType(?string $type): bool {
+        $t = self::canonicalType($type);
+        return \in_array($t, ['date', 'time', 'datetime'], true);
+    }
+
+    private static function getDateFormatForType(?string $type): ?string {
+        $t = self::canonicalType($type);
+        if ($t === null) return null;
+        return self::$dateFormats[$t] ?? null;
+    }
+
+    private function parseDateValue(mixed $value, ?string $format = null): ?DateTimeImmutable {
+        if($value instanceof DateTimeImmutable) return $value;
+        if(!\is_string($value)) return null;
+
+        if($format !== null) {
+            $dt = DateTimeImmutable::createFromFormat($format, $value);
+            if ($dt !== false) return $dt;
+
+            try {
+                return new DateTimeImmutable($value);
+            } catch(Throwable $e) {
+                return null;
+            }
+        }
+
+        try {
+            return new DateTimeImmutable($value);
+        } catch(Throwable $e) {
+            return null;
+        }
+    }
+
+    private function valuesAreEqual(mixed $original, mixed $value, ?string $colType = null): bool {
+        if ($original === null && $value === null) return true;
+        if ($original === null || $value === null) return false;
+
+        $canonical = self::canonicalType($colType);
+        if($canonical && \in_array($canonical, ['date', 'time', 'datetime'], true)) {
+            $format = self::getDateFormatForType($canonical) ?? 'Y-m-d H:i:s';
+            if($original instanceof DateTimeImmutable && $value instanceof DateTimeImmutable) {
+                return $original->format($format) === $value->format($format);
+            }
+            if($original instanceof DateTimeImmutable && \is_string($value)) {
+                $valueDate = $this->parseDateValue($value, $format);
+                if ($valueDate === null) return false;
+                return $original->format($format) === $valueDate->format($format);
+            }
+            if(\is_string($original) && $value instanceof DateTimeImmutable) {
+                $originalDate = $this->parseDateValue($original, $format);
+                if ($originalDate === null) return false;
+                return $originalDate->format($format) === $value->format($format);
+            }
+            return (string)$original === (string)$value;
+        }
+
+        return $original === $value;
+    }
+
+    private static function canonicalPrimitiveForType(?string $type): ?string {
+        $t = self::canonicalType($type);
+        return match ($t) {
+            'integer' => 'integer',
+            'boolean' => 'boolean',
+            'double' => 'double',
+            'string' => 'string',
+            default => null,
+        };
     }
 
 }
