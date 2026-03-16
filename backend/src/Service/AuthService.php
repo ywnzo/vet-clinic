@@ -55,7 +55,7 @@ class AuthService {
             throw new UnauthorizedException('Refresh token expired');
         }
 
-        $user = User::findByID((int) $refreshToken->user_id);
+        $user = $refreshToken->getUser();
         if(!$user) {
             throw new UnauthorizedException('User not found');
         }

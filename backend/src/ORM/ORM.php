@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\ORM;
 
+use DateTimeImmutable;
 use PDO;
 
 class ORM {
@@ -10,10 +11,27 @@ class ORM {
     protected string $table;
     protected ?int $id = null;
     private array $data = [];
+    private array $relationsCache = [];
 
     protected static array $allowedColumns = [];
     protected static array $hiddenColumns = [];
     protected static array $columnTypes = [];
+
+    protected static array $primitiveMap = [
+        'integer' => 'integer',
+        'int' => 'integer',
+        'bool' => 'boolean',
+        'boolean' => 'boolean',
+        'double' => 'double',
+        'float' => 'float',
+        'string' => 'string',
+    ];
+
+    protected static array $dateFormats = [
+        'datetime' => 'Y-m-d H:i:s',
+        'date' => 'Y-m-d',
+        'time' => 'H:i:s',
+    ];
 
     private bool $dirty = false;
     private array $originalData = [];
@@ -21,8 +39,8 @@ class ORM {
     public function __construct(array $data = []) {
         $this->table = (string)$this->getTable();
         if($data) {
-            $this->originalData = $this->data = $data;
-            $this->id = $data['id'] ?? null;
+            $this->originalData = $this->data = $this->castRowFromStorage($data);
+            $this->id = $this->data['id'] ?? null;
         }
     }
 
@@ -31,19 +49,40 @@ class ORM {
     }
 
     public function __set($name, $value): void {
-        if (isset($this->data[$name]) && $this->data[$name] !== $value) {
-            $this->dirty = true;
-        }
-        if (isset(static::columnTypes[$name])) {
-            if(!\is_array($value)) {
-                settype($value, static::columnTypes[$name]);
+        if(isset($this->id)) {
+            $original = $this->originalData[$name] ?? null;
+            if($original !== $value) {
+                $this->dirty = true;
             }
         }
+
+        $type = static::$columnTypes[$name] ?? null;
+        if($type !== null) {
+            $lower = strtolower($type);
+            if(isset(self::$dateFormats[$lower])) {
+                if(\is_string($value)){
+                    try {
+                        $value = new DateTimeImmutable($value);
+                    } catch (\Throwable $e) {}
+                }
+            } elseif(isset(self::$primitiveMap[$lower])) {
+                settype($value, self::$primitiveMap[$lower]);
+            }
+        }
+
         $this->data[$name] = $value;
     }
 
     public static function setPDO(PDO $pdo): void {
         static::$pdo = $pdo;
+    }
+
+    public static function getTable(): string {
+        return static::$table;
+    }
+
+    protected function clearRelationsCache(): void {
+        $this->relationsCache = [];
     }
 
     public static function transaction(callable $callback): mixed {
@@ -76,18 +115,25 @@ class ORM {
     }
 
     private function insert(): void {
-        $columns = array_keys($this->data);
+        $intersect = array_intersect_key($this->data, array_flip(static::$allowedColumns));
+        $columns = array_values($intersect);
         $placeholders = array_map(fn($c) => ":$c", $columns);
 
-        $columns = implode(', ', $columns);
-        $placeholders = implode(', ', $placeholders);
+        $columnsSql = implode(', ', $columns);
+        $placeholdersSql = implode(', ', $placeholders);
 
-        $query = "INSERT INTO $this->table ($columns) VALUES ($placeholders)";
+        $query = "INSERT INTO $this->table ($columnsSql) VALUES ($placeholdersSql)";
         $stmt = static::$pdo->prepare($query);
-        $stmt->execute($this->data);
+
+        $params = [];
+        foreach($columns as $col) {
+            $params[$col] = $this->prepareValueForStorage($col, $this->data[$col]);
+        }
+
+        $stmt->execute($params);
         $this->id = (int) static::$pdo->lastInsertId();
-        $this->data['id'] = $this->id;
         $this->originalData = $this->data;
+        $this->clearRelationsCache();
     }
 
     private function update(): void {
@@ -95,18 +141,19 @@ class ORM {
         $params = [];
         foreach($this->data as $key => $value) {
             if ($key === 'id') continue;
+            if (!\in_array($key, static::$allowedColumns)) continue;
             if ($value === ($this->originalData[$key] ?? null)) continue;
             $set[] = "$key = :$key";
-            $params[$key] = $value;
+            $params[$key] = $this->prepareValueForStorage($key, $value);
         }
 
         if (empty($set)) return;
 
         $params['id'] = $this->id;
-
         $query = "UPDATE $this->table SET " . implode(',', $set) . " WHERE id = :id";
         $stmt = static::$pdo->prepare($query);
         $stmt->execute($params);
+        $this->clearRelationsCache();
     }
 
     public function delete(): ORM {
@@ -114,6 +161,7 @@ class ORM {
             $stmt = static::$pdo->prepare("DELETE FROM $this->table WHERE id = :id");
             $stmt->execute(['id' => $this->id]);
         }
+        $this->clearRelationsCache();
         return $this;
     }
 
@@ -169,7 +217,7 @@ class ORM {
     }
 
     public static function all(): array {
-        $table = self::getTable();
+        $table = static::getTable();
         $stmt = static::$pdo->query("SELECT * FROM $table");
         $results = [];
         while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -178,15 +226,38 @@ class ORM {
         return $results;
     }
 
-    public static function getTable(): string {
-        return strtolower((new \ReflectionClass(static::class)->getShortName())) . 's';
+    public function hasMany(string $relatedClass, string $foreignKey, string $localKey = 'id'): array {
+        $cacheKey = "hasMany:$relatedClass:$foreignKey:$localKey";
+        if(isset($this->relationsCache[$cacheKey])) {
+            return $this->relationsCache[$cacheKey];
+        }
+
+        $results = $relatedClass::find([$foreignKey => $this->{$localKey}]);
+        $this->relationsCache[$cacheKey] = $results;
+        return $results;
+    }
+
+    public function belongsTo(string $relatedClass, string $foreignKey, string $localKey): ?ORM {
+        $cacheKey = "belongsTo:$relatedClass:$foreignKey:$localKey";
+        if(isset($this->relationsCache[$cacheKey])) {
+            return $this->relationsCache[$cacheKey];
+        }
+
+        $foreignValue = $this->{$foreignKey} ?? null;
+        if($foreignValue === null) {
+            return null;
+        }
+
+        $result = $relatedClass::findByID((int)$foreignValue);
+        $this->relationsCache[$cacheKey] = $result;
+        return $result ?? null;
     }
 
     private static function prepareQuery(string $query, array $filters = []):array {
         $params = [];
 
         foreach($filters as $column => $value) {
-            self::validateColumn($column);
+            static::validateColumn($column);
 
             if(!\is_array($value)) {
                 $query .= " AND $column = :$column";
@@ -218,6 +289,64 @@ class ORM {
     }
 
     public function toArray(): array {
-        return array_diff_key($this->data, array_flip(static::$hiddenColumns));
+        $out = [];
+        foreach($this->data as $col => $val) {
+            if (\in_array($col, static::$hiddenColumns)) continue;
+
+            $type = strtolower((string) (static::$columnTypes[$col] ?? null));
+            if ($val instanceof DateTimeImmutable && isset(self::$dateFormats[$type])) {
+                $format = self::$dateFormats[$type];
+                $out[$col] = $val->format($format);
+            } else {
+                $out[$col] = $val;
+            }
+        }
+        return $out;
     }
+
+    private function castRowFromStorage(array $row): array {
+        foreach($row as $col => $val) {
+            $type = static::$columnTypes[$col] ?? null;
+            if ($val === null) continue;
+            if ($type === null) continue;
+
+            $lower = strtolower((string) $type);
+            if (isset(self::$dateFormats[$lower])){
+                try {
+                    $row[$col] = new DateTimeImmutable($val);
+                } catch (\Throwable $e) {
+                    $row[$col] = $val;
+                }
+            } elseif (isset(self::$primitiveMap[$lower])) {
+                settype($val, self::$primitiveMap[$lower]);
+                $row[$col] = $val;
+            } else {
+                $row[$col] = $val;
+            }
+        }
+        return $row;
+    }
+
+    private function prepareValueForStorage(string $col, mixed $value): mixed {
+        if ($value === null) return null;
+
+        $type = static::$columnTypes[$col] ?? null;
+        if ($type === null) return $value;
+
+        $lower = strtolower((string) $type);
+        if($value instanceof DateTimeImmutable && isset(self::$dateFormats[$lower])) {
+            return $value->format(self::$dateFormats[$lower]);
+        }
+
+        if(isset(self::$dateFormats[$lower]) && \is_string($value)) {
+            return $value;
+        }
+
+        if(isset(self::$primitiveMap[$lower])) {
+            settype($value, self::$primitiveMap[$lower]);
+            return $value;
+        }
+        return $value;
+    }
+
 }

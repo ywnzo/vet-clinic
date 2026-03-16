@@ -31,13 +31,23 @@ CREATE TABLE IF NOT EXISTS users (
 SQL;
 
 $createRefreshTokensTable = <<<SQL
-CREATE TABLE IF NOT EXISTS refreshtokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     token TEXT NOT NULL,
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+SQL;
+
+$createAppointmentsTable = <<<SQL
+CREATE TABLE IF NOT EXISTS appointments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    date DATETIME NOT NULL,
+    time DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 );
 SQL;
 
@@ -59,7 +69,15 @@ try {
 
 try {
     $pdo->exec($createRefreshTokensTable);
-    echo "✅ Table 'refreshtokens' created successfully\n";
+    echo "✅ Table 'refresh_tokens' created successfully\n";
+} catch (\PDOException $e) {
+    echo "❌ Error creating table: " . $e->getMessage() . "\n";
+    exit(1);
+}
+
+try {
+    $pdo->exec($createAppointmentsTable);
+    echo "✅ Table 'appointments' created successfully\n";
 } catch (\PDOException $e) {
     echo "❌ Error creating table: " . $e->getMessage() . "\n";
     exit(1);
