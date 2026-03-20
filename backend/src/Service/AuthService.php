@@ -6,6 +6,7 @@ use App\ORM\User;
 use App\ORM\RefreshToken;
 use App\Exception\ValidationException;
 use App\Exception\UnauthorizedException;
+use DateTimeImmutable;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -51,7 +52,7 @@ class AuthService {
         }
 
         $refreshToken = $results[0];
-        if(strtotime($refreshToken->expires_at) < time()) {
+        if($refreshToken->expires_at < new DateTimeImmutable()) {
             throw new UnauthorizedException('Refresh token expired');
         }
 
