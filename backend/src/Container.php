@@ -7,12 +7,15 @@ use App\Core\Logger;
 use App\Service\UserService;
 use App\Service\AuthService;
 use App\Service\PolicyService;
+use App\Service\AppointmentService;
 
 use App\Controller\UserController;
 use App\Controller\AuthController;
+use App\Controller\AppointmentController;
 use App\Middleware\AuthMiddleware;
 
 use App\Policies\UserPolicy;
+use App\Policies\AppointmentPolicy;
 
 class Container {
     private array $bindings = [];
@@ -29,15 +32,18 @@ class Container {
 
         $this->singleton('authService', fn(Container $c) => new AuthService());
         $this->singleton('userService', fn(Container $c) => new UserService());
+        $this->singleton('appointmentService', fn(Container $c) => new AppointmentService());
 
         $this->singleton('policyService', function (Container $c) {
             $policyService = new PolicyService();
             $policyService->register('user', UserPolicy::class);
+            $policyService->register('appointment', AppointmentPolicy::class);
             return $policyService;
         });
 
         $this->singleton('userController', fn(Container $c) => new UserController($c->get('userService'), $c->get('logger')));
         $this->singleton('authController', fn(Container $c) => new AuthController($c->get('authService'), $c->get('logger')));
+        $this->singleton('appointmentController', fn(Container $c) => new AppointmentController($c->get('appointmentService'), $c->get('logger')));
 
         $this->singleton('authMiddleware', fn(Container $c) => new AuthMiddleware($c->get('authService'), $c->get('policyService')));
     }

@@ -2,8 +2,6 @@
 declare(strict_types=1);
 namespace App\Policies;
 
-use App\Exception\UnauthorizedException;
-
 class UserPolicy extends AbstractPolicy {
 
     public function __construct(array $auth) {

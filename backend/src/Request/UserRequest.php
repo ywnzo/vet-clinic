@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Request;
 
 use App\Validation\Validator;
-use App\Validation\Rule\{RequiredRule, EmailRule, StringRule};
+use App\Validation\Rules\{RequiredRule, EmailRule, StringLengthRule};
 
 class UserRequest {
     private array $data;
@@ -19,10 +19,10 @@ class UserRequest {
     public function validateCreate(): void {
         $validator = new Validator();
         $validator
-            ->addRules('name', new RequiredRule(), new StringRule(1, 64))
-            ->addRules('surname', new RequiredRule(), new StringRule(1, 64))
+            ->addRules('name', new RequiredRule(), new StringLengthRule(1, 64))
+            ->addRules('surname', new RequiredRule(), new StringLengthRule(1, 64))
             ->addRules('email', new RequiredRule(), new EmailRule())
-            ->addRules('password', new RequiredRule(), new StringRule(1));
+            ->addRules('password', new RequiredRule(), new StringLengthRule(1));
         $validator->validate($this->data);
     }
 
@@ -33,15 +33,15 @@ class UserRequest {
         }
 
         if(isset($this->data['name'])) {
-            $validator->addRules('name', new RequiredRule(), new StringRule(1, 64));
+            $validator->addRules('name', new RequiredRule(), new StringLengthRule(1, 64));
         }
 
         if(isset($this->data['surname'])) {
-            $validator->addRules('surname', new RequiredRule(), new StringRule(1, 64));
+            $validator->addRules('surname', new RequiredRule(), new StringLengthRule(1, 64));
         }
 
         if(isset($this->data['address'])) {
-            $validator->addRules('address', new RequiredRule(), new StringRule(1, 128));
+            $validator->addRules('address', new RequiredRule(), new StringLengthRule(1, 128));
         }
         $validator->validate($this->data);
     }

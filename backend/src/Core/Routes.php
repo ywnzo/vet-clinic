@@ -37,6 +37,7 @@ class Routes {
     private function registerRoutes() {
         $authController = $this->container->get('authController');
         $userController = $this->container->get('userController');
+        $appointmentController = $this->container->get('appointmentController');
         $authMiddleware = $this->container->get('authMiddleware');
 
         $this->router->group('/api/auth', function(RouteCollectorProxy $group) use ($authController) {
@@ -46,13 +47,22 @@ class Routes {
             $group->post('/logout', [$authController, 'logout']);
         });
 
-        $this->router->group('/api/users', function(RouteCollectorProxy $group) use ($userController, $authMiddleware) {
+        $this->router->group('/api/users', function(RouteCollectorProxy $group) use ($userController) {
             $group->get('', [$userController, 'index']);
             $group->get('/{id}', [$userController, 'find']);
             $group->post('/search', [$userController, 'find']);
             $group->post('', [$userController, 'create']);
             $group->put('/{id}', [$userController, 'update']);
             $group->delete('/{id}', [$userController, 'delete']);
+        })->add($authMiddleware);
+
+        $this->router->group('/api/appointments', function(RouteCollectorProxy $group) use ($appointmentController) {
+            $group->get('', [$appointmentController, 'index']);
+            $group->get('/{id}', [$appointmentController, 'find']);
+            $group->post('/search', [$appointmentController, 'find']);
+            $group->post('', [$appointmentController, 'create']);
+            $group->put('/{id}', [$appointmentController, 'update']);
+            $group->delete('/{id}', [$appointmentController, 'delete']);
         })->add($authMiddleware);
 
         $this->router->get('/api/health', function(Request $req, Response $res): Response {

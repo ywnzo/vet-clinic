@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace App\Middleware;
 
+use App\Core\AuthorizationHandler;
 use App\Response\ApiResponse;
 use App\Service\AuthService;
 use App\Service\PolicyService;
@@ -15,7 +16,11 @@ use Psr\Http\Server\RequestHandlerInterface as Handler;
 use Slim\Psr7\Response as SlimResponse;
 
 class AuthMiddleware implements MiddlewareInterface {
-    public function __construct(private AuthService $authService, private PolicyService $policyService) {}
+    private AuthorizationHandler $authorizationHandler;
+
+    public function __construct(private AuthService $authService, private PolicyService $policyService) {
+        $this->authorizationHandler = new AuthorizationHandler($policyService);
+    }
 
     public function process(Request $request, Handler $handler): Response {
         try {
@@ -44,40 +49,12 @@ class AuthMiddleware implements MiddlewareInterface {
             $request = $request->withAttribute('auth', (array)$payload);
             $request = $request->withAttribute('user', $user);
 
-            $this->authorizeUserRoutes($request, $payload);
+            $this->authorizationHandler->authorize($request, $payload);
 
             return $handler->handle($request);
         } catch (UnauthorizedException $e) {
             $response = new SlimResponse();
             return ApiResponse::error($response, $e->getUserMessage(), $e->getStatusCode());
-        }
-    }
-
-    public function authorizeUserRoutes(Request $request, array $payload): void {
-        $path = $request->getUri()->getPath();
-        $method = $request->getMethod();
-
-        if (!str_starts_with($path, '/api/users')) {
-            return;
-        }
-
-        $policy = $this->policyService->getPolicy('user', $payload);
-
-        $authParts = explode('/', $path);
-        $userID = (int)end($authParts);
-
-        $action = match ($method) {
-            'GET' => $userID ? 'show' : 'index',
-            'POST' => str_contains($path, '/search') ? 'search' : 'create',
-            'PUT' => 'update',
-            'DELETE' => 'delete',
-            default => 'index',
-        };
-
-        if(($method === 'GET' || $method === 'PUT' || $method === 'DELETE') && $userID) {
-            $policy->authorize($action, $userID);
-        } else {
-            $policy->authorize($action);
         }
     }
 }
