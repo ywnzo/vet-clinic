@@ -24,6 +24,17 @@ class Appointment extends ORM {
         return static::find(['time' => $time]);
     }
 
+    public static function findByRange(?string $start, ?string $end): array {
+        $table = static::$table;
+        $stmt = static::$pdo->prepare("SELECT * FROM $table WHERE date BETWEEN :start AND :end");
+        $stmt->execute(['start' => $start, 'end' => $end]);
+        $results = [];
+        while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $results[] = new static($row);
+        }
+        return $results;
+    }
+
     public static function findByUserID(int $userID): array {
         return static::find(['user_id' => $userID]);
     }

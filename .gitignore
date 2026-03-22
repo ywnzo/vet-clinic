@@ -3,3 +3,4 @@
 .phpunit.cache/
 vendor/
 TODO.md
+node_modules/

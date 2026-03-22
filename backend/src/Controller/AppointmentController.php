@@ -37,10 +37,24 @@ class AppointmentController extends BaseController {
         });
     }
 
+    public function range(Request $req, Response $res): Response {
+        return $this->respond($res, function() use ($res, $req) {
+            $body = $req->getParsedBody() ?? [];
+            $start = $body['start'] ?? null;
+            $end = $body['end'] ?? null;
+            $appointments = $this->service->findByRange($start, $end);
+            return $this->success($res, $appointments);
+        });
+    }
+
     public function create(Request $req, Response $res, array $args): Response {
         return $this->respond($res, function() use ($res, $req, $args) {
             $body = $req->getParsedBody() ?? [];
 
+            $user = $req->getAttribute('user');
+            if($user) {
+                $body['user_id'] = $user->id;
+            }
             $appointmentRequest = new AppointmentRequest($body);
             $appointmentRequest->validateCreate();
 

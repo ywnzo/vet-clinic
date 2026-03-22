@@ -60,6 +60,7 @@ class Routes {
             $group->get('', [$appointmentController, 'index']);
             $group->get('/{id}', [$appointmentController, 'find']);
             $group->post('/search', [$appointmentController, 'find']);
+            $group->post('/range', [$appointmentController, 'range']);
             $group->post('', [$appointmentController, 'create']);
             $group->put('/{id}', [$appointmentController, 'update']);
             $group->delete('/{id}', [$appointmentController, 'delete']);

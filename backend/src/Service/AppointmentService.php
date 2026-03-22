@@ -28,6 +28,11 @@ class AppointmentService extends BaseService {
         return $appointment->toArray();
     }
 
+    public function findByRange(?string $start, ?string $end): array {
+        $appointments = Appointment::findByRange($start, $end);
+        return array_map(fn($appointment) => $appointment->toArray(), $appointments);
+    }
+
     public function create(array $args): array {
         return Appointment::transaction(function() use ($args) {
             $appointment = new Appointment($args);
