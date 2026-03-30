@@ -11,6 +11,7 @@
                     <col class="w-[20%]">
                     <col class="w-[20%]">
                 </colgroup>
+
                 <thead class="bg-gray-800 text-white">
                     <tr>
                         <th class="px-4 py-2 text-left">Name</th>
@@ -18,6 +19,7 @@
                         <th class="px-4 py-2 text-right">Price</th>
                     </tr>
                 </thead>
+
 
                 <tbody class="divide-y divide-gray-800">
                     <tr v-for="item in price.items" :key="item.name" class="p-2">
